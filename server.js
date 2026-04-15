@@ -140,8 +140,8 @@ app.post("/faculty-login", (req, res) => {
   const { username, password } = req.body;
   
   // Hardcoded faculty credentials
-  const facultyUsername = "admin";
-  const facultyPassword = "faculty123";
+  const facultyUsername = "GCOEK";
+  const facultyPassword = "6036";
 
   if (username === facultyUsername && password === facultyPassword) {
     res.json({ success: true, message: "Welcome Faculty!" });

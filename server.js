@@ -81,13 +81,11 @@ function getUniqueAIInsights(scores, studentName) {
   const avg = total / values.length;
 
   let insight, tier;
-  if (avg >= 40)      { insight = "🌟 Elite Performer — Executive Potential"; tier = "A+"; }
-  else if (avg >= 32) { insight = "⭐ Outstanding — Industry Leader";          tier = "A"; }
-  else if (avg >= 25) { insight = "✅ Excellent — High Potential";             tier = "B+"; }
-  else if (avg >= 18) { insight = "⚡ Strong — Above Average";                 tier = "B"; }
-  else if (avg >= 12) { insight = "📈 Developing — Good Foundation";           tier = "B"; }
-  else                { insight = "🌱 Beginner — Focus on Growth";             tier = "C"; }
-
+ if (avg >= 8)      { insight = "🌟 Top Performer"; tier = "A+"; }
+else if (avg >= 6) { insight = "🚀 Strong Performer"; tier = "A"; }
+else if (avg >= 4) { insight = "🌟 All-Rounder"; tier = "B+"; }
+else if (avg >= 2) { insight = "📈 Growing"; tier = "B"; }
+else               { insight = "🌱 Beginner"; tier = "C"; }
   const skillsArray = Object.entries(scores);
   const bestSkill  = skillsArray.reduce((a, b) => a[1] > b[1] ? a : b)[0];
   const worstSkill = skillsArray.reduce((a, b) => a[1] < b[1] ? a : b)[0];

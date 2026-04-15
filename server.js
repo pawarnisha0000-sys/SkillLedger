@@ -78,7 +78,7 @@ const CAREER_PATHS = {
 function getUniqueAIInsights(scores, studentName) {
   const values = Object.values(scores);
   const total = values.reduce((a, b) => a + b, 0);
-  const avg = total / values.length;
+  const avg = total / 2;
 
   let insight, tier;
  if (avg >= 8)      { insight = "🌟 Top Performer"; tier = "A+"; }

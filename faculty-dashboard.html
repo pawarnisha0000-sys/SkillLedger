@@ -312,7 +312,14 @@ nav {
       </table>
     </div>
   </div>
-
+<!-- ✅ ADD HERE -->
+<div class="section-title">Voting Activity</div>
+<div class="full">
+  <div class="panel">
+    <div class="panel-title">Who voted for whom</div>
+    <div id="votes-list"></div>
+  </div>
+</div>
 </div>
 
 <script>
@@ -445,8 +452,32 @@ function buildPerfTable(entries){
     const t=tier(s.total||0); const tc=tierPillClass(t);
     return`<tr><td style="font-weight:600;color:var(--text)">${name}</td><td style="font-weight:700;color:var(--gold)">${(s.total||0).toFixed(0)}</td><td><span class="tier-pill ${tc}">${t}</span></td><td style="color:var(--muted);font-size:12px">${CAREERS[t]||"Specialist"}</td><td style="color:var(--muted)">${s.voters}</td></tr>`;
   }).join("");
+  loadVotes();
 }
+async function loadVotes() {
+  try {
+    const res = await fetch(`${API}/all-votes`);
+    const data = await res.json();
 
+    const container = document.getElementById("votes-list");
+
+    if (!data.length) {
+      container.innerHTML = "<p>No voting data yet</p>";
+      return;
+    }
+
+    container.innerHTML = data.map(v => `
+      <div style="padding:10px; border-bottom:1px solid #333;">
+        <b>${v.voter}</b> → voted for <b>${v.student}</b><br>
+        <small>${JSON.stringify(v.skills)}</small><br>
+        <small>${new Date(v.time).toLocaleString()}</small>
+      </div>
+    `).join("");
+
+  } catch {
+    document.getElementById("votes-list").innerHTML = "Error loading votes";
+  }
+}
 function showOffline(){document.getElementById("heatmap-container").innerHTML='<div class="empty"><h3>Backend not running</h3><p>Start the server: <code>node server.js</code> then click Refresh.</p></div>';}
 function showEmpty(){document.getElementById("heatmap-container").innerHTML='<div class="empty"><h3>No data yet</h3><p>Add students and submit votes in the main app, then come back here.</p></div>';}
 

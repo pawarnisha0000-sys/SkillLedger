@@ -14,7 +14,8 @@ const FILE = "data.json";
 
 let db = { 
   users: [], 
-  students: {} 
+  students: {},
+  votes: []
 };
 
 if (fs.existsSync(FILE)) {
@@ -210,7 +211,16 @@ app.post("/vote", (req, res) => {
     if (skills[skill] > 0) s.scores[skill] = (s.scores[skill] || 0) + Number(skills[skill]);
   });
 
-  if (!s.voters.includes(user)) s.voters.push(user);
+  // ✅ Store full vote details
+if (!db.votes) db.votes = [];
+
+db.votes.push({
+  voter: user,
+  student: student,
+  skills: skills,
+  time: new Date().toISOString()
+});
+
   saveData();
 
   res.json({ message: `✅ Vote submitted! Cost: ${cost} credits`, remainingCredits: u.credits });
@@ -255,7 +265,9 @@ app.get("/", (req, res) => {
     users: db.users.length
   });
 });
-
+app.get("/all-votes", (req, res) => {
+  res.json(db.votes || []);
+});
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {

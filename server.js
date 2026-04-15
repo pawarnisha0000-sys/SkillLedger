@@ -115,7 +115,7 @@ else               { insight = "🌱 Beginner"; tier = "C"; }
   };
 }
 
-// ================= REGISTER =================
+// ================= REGISTERS =================
 app.post("/register", (req, res) => {
   const { username, password } = req.body;
   if (!username || !password) return res.json({ message: "❌ Username and password required!" });

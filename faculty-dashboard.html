@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Faculty Analytics · SkillLedger Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<style>
+:root {
+  --bg: #0d0f1a;
+  --surface: #161929;
+  --surface2: #1e2338;
+  --border: rgba(255,255,255,0.07);
+  --gold: #f5c842;
+  --gold2: #e8a820;
+  --teal: #00d4aa;
+  --rose: #f05d7b;
+  --lavender: #9b8ee0;
+  --text: #eef0f8;
+  --muted: #7a7f9a;
+  --s1:#c94f3a; --s2:#3a6bc9; --s3:#2a9c6e; --s4:#b06d1a; --s5:#7b4cc4;
+  --radius: 20px;
+}
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background:
+    radial-gradient(ellipse 600px 400px at 10% 20%, rgba(155,142,224,0.10) 0%, transparent 70%),
+    radial-gradient(ellipse 500px 400px at 90% 80%, rgba(0,212,170,0.07) 0%, transparent 70%),
+    radial-gradient(ellipse 400px 300px at 60% 40%, rgba(245,200,66,0.04) 0%, transparent 70%);
+  pointer-events: none; z-index: 0;
+}
+/* NAV */
+nav {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(13,15,26,0.95);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 40px; height: 60px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.nav-brand {
+  font-family: 'Playfair Display', serif;
+  font-weight: 900; font-size: 1.15rem; color: var(--gold);
+  display: flex; align-items: center; gap: 10px;
+}
+.nav-badge {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 10px; font-weight: 600;
+  background: var(--s1); color: #fff;
+  padding: 3px 10px; border-radius: 99px;
+  letter-spacing: .5px; text-transform: uppercase;
+}
+.nav-right { display: flex; align-items: center; gap: 14px; }
+.nav-link { color: var(--muted); font-size: 13px; text-decoration: none; font-weight: 500; transition: color .2s; }
+.nav-link:hover { color: var(--gold); }
+.btn-nav {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px; font-weight: 600;
+  border: none; cursor: pointer;
+  padding: 8px 18px; border-radius: 99px;
+  transition: opacity .2s, transform .15s;
+}
+.btn-refresh { background: rgba(255,255,255,0.08); color: var(--text); }
+.btn-export  { background: linear-gradient(135deg, var(--gold), var(--gold2)); color: #0d0f1a; font-weight: 700; }
+.btn-nav:hover { opacity: .85; transform: translateY(-1px); }
+/* PAGE */
+.page { max-width: 1320px; margin: 0 auto; padding: 44px 40px 80px; position: relative; z-index: 1; }
+/* HEADER */
+.page-header {
+  display: flex; align-items: flex-end; justify-content: space-between;
+  margin-bottom: 44px; gap: 20px; flex-wrap: wrap;
+}
+.page-header h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(2rem,4vw,3.4rem); font-weight: 900;
+  line-height: 1.05; letter-spacing: -1.5px;
+  background: linear-gradient(135deg, var(--gold) 0%, var(--gold2) 50%, var(--rose) 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.header-meta { font-size: 13px; color: var(--muted); text-align: right; line-height: 1.8; }
+.header-meta strong { color: var(--text); }
+/* KPI STRIP */
+.kpi-strip { display: grid; grid-template-columns: repeat(auto-fit,minmax(160px,1fr)); gap: 16px; margin-bottom: 36px; }
+.kpi {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 22px 24px;
+  position: relative; overflow: hidden;
+  animation: rise .5s ease both; transition: border-color .3s;
+}
+.kpi:hover { border-color: rgba(245,200,66,0.2); }
+@keyframes rise { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
+.kpi-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 8px; }
+.kpi-value { font-family: 'Playfair Display', serif; font-size: 2.2rem; font-weight: 900; color: var(--gold); line-height: 1; letter-spacing: -1px; }
+.kpi-sub { font-size: 12px; color: var(--muted); margin-top: 6px; }
+.kpi-accent { position: absolute; bottom: 0; left: 0; right: 0; height: 3px; }
+/* SECTION TITLE */
+.section-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.1rem; font-weight: 700; color: var(--text);
+  margin-bottom: 16px; display: flex; align-items: center; gap: 12px;
+}
+.section-title::after { content:''; flex:1; height:1px; background:var(--border); }
+/* GRIDS */
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+.full    { margin-bottom: 20px; }
+@media(max-width:900px) { .two-col{grid-template-columns:1fr} .page{padding:28px 20px 60px} nav{padding:0 20px} }
+/* PANEL */
+.panel {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 28px;
+  animation: rise .5s ease both; transition: border-color .3s;
+}
+.panel:hover { border-color: rgba(255,255,255,0.10); }
+.panel-title { font-size: .82rem; font-weight: 600; text-transform: uppercase; letter-spacing: .8px; color: var(--muted); margin-bottom: 20px; }
+/* HEATMAP */
+#heatmap-grid { display: grid; gap: 3px; }
+.hm-cell {
+  aspect-ratio: 1; border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 600; cursor: pointer;
+  transition: transform .15s, box-shadow .15s; position: relative;
+}
+.hm-cell:hover { transform: scale(1.18); z-index: 10; box-shadow: 0 4px 20px rgba(0,0,0,.5); }
+.hm-cell .tt {
+  display: none; position: absolute; bottom: calc(100% + 8px); left: 50%;
+  transform: translateX(-50%);
+  background: var(--surface2); color: var(--text);
+  font-size: 11px; font-weight: 500; padding: 5px 11px; border-radius: 8px;
+  white-space: nowrap; z-index: 20; pointer-events: none; border: 1px solid var(--border);
+}
+.hm-cell:hover .tt { display: block; }
+.hm-col-label { font-size: 10px; font-weight: 600; color: var(--muted); text-align: center; padding: 4px 2px; word-break: break-word; line-height: 1.2; }
+.hm-row-label { font-size: 11px; font-weight: 500; color: var(--text); display: flex; align-items: center; padding-right: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 130px; }
+.heat-legend { display: flex; align-items: center; gap: 8px; margin-top: 16px; font-size: 11px; color: var(--muted); }
+.heat-legend-bar { flex: 1; height: 8px; border-radius: 99px; background: linear-gradient(90deg,#1e2338,#3a3060,#7b4cc4,#c94f3a,#f5c842); }
+/* SKILL RANK */
+.skill-rank-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.skill-rank-row:last-child { border-bottom: none; }
+.skill-rank-num { font-family: 'Playfair Display', serif; font-size: 1.3rem; font-weight: 900; width: 28px; flex-shrink: 0; color: var(--muted); line-height: 1; }
+.skill-rank-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.skill-rank-name { flex: 1; font-size: 14px; font-weight: 500; color: var(--text); }
+.skill-rank-bar-wrap { flex: 2; height: 6px; background: rgba(255,255,255,0.06); border-radius: 99px; overflow: hidden; }
+.skill-rank-bar { height: 100%; border-radius: 99px; transition: width 1s cubic-bezier(.4,0,.2,1); }
+.skill-rank-val { font-size: 13px; font-weight: 600; color: var(--text); min-width: 40px; text-align: right; }
+.skill-delta { font-size: 11px; padding: 2px 8px; border-radius: 99px; font-weight: 600; min-width: 52px; text-align: center; }
+.delta-hi { background: rgba(0,212,170,0.12); color: var(--teal); }
+.delta-lo { background: rgba(240,93,123,0.12); color: var(--rose); }
+/* GAP */
+.gap-item { display: flex; align-items: center; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+.gap-item:last-child { border-bottom: none; }
+.gap-student { font-size: 13px; font-weight: 600; min-width: 110px; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gap-skill   { font-size: 11px; color: var(--muted); min-width: 95px; }
+.gap-bar-wrap { flex: 1; height: 6px; background: rgba(255,255,255,0.06); border-radius: 99px; overflow: hidden; }
+.gap-bar { height: 100%; border-radius: 99px; }
+.gap-score { font-size: 12px; font-weight: 600; min-width: 36px; text-align: right; color: var(--rose); }
+/* TABLE */
+.perf-table { width: 100%; border-collapse: separate; border-spacing: 0 5px; font-size: 13px; }
+.perf-table th { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .8px; color: var(--muted); padding: 6px 12px; text-align: left; }
+.perf-table td { padding: 11px 12px; background: var(--surface2); }
+.perf-table tr td:first-child { border-radius: 10px 0 0 10px; }
+.perf-table tr td:last-child  { border-radius: 0 10px 10px 0; }
+.tier-pill { display: inline-block; font-size: 11px; font-weight: 700; padding: 3px 11px; border-radius: 99px; }
+.tier-ap { background: rgba(245,200,66,0.15); color: var(--gold); }
+.tier-a  { background: rgba(0,212,170,0.12);  color: var(--teal); }
+.tier-bp { background: rgba(155,142,224,0.12); color: var(--lavender); }
+.tier-b  { background: rgba(58,107,201,0.12);  color: #6fa3f5; }
+.tier-c  { background: rgba(240,93,123,0.12);  color: var(--rose); }
+/* CHART */
+.chart-wrap { position: relative; }
+.chart-wrap canvas { width: 100% !important; background: transparent !important; }
+/* EMPTY */
+.empty { text-align: center; padding: 60px 20px; color: var(--muted); }
+.empty h3 { font-family: 'Playfair Display', serif; font-size: 1.1rem; margin-bottom: 8px; color: var(--text); }
+.empty p  { font-size: 13px; line-height: 1.6; }
+.empty code { background: var(--surface2); padding: 2px 8px; border-radius: 6px; font-size: 12px; color: var(--teal); }
+/* LOADER */
+#loader {
+  position: fixed; inset: 0; background: var(--bg);
+  display: flex; align-items: center; justify-content: center;
+  flex-direction: column; gap: 18px; z-index: 999;
+  transition: opacity .4s, visibility .4s;
+}
+#loader.hidden { opacity: 0; visibility: hidden; }
+.loader-ring { width: 44px; height: 44px; border: 3px solid var(--border); border-top-color: var(--gold); border-radius: 50%; animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+#loader p { font-family: 'Playfair Display', serif; font-size: 13px; color: var(--muted); letter-spacing: .5px; }
+#last-updated { font-size: 11px; color: var(--muted); }
+.kpi:nth-child(1){animation-delay:.05s} .kpi:nth-child(2){animation-delay:.10s}
+.kpi:nth-child(3){animation-delay:.15s} .kpi:nth-child(4){animation-delay:.20s} .kpi:nth-child(5){animation-delay:.25s}
+</style>
+</head>
+<body>
+
+<div id="faculty-login-overlay" style="position:fixed; inset:0; background:var(--bg); z-index:9999; display:flex; align-items:center; justify-content:center; transition: opacity 0.3s;">
+  <div class="panel" style="width: 100%; max-width: 400px; text-align: center; background:var(--surface);">
+    <h2 style="color:var(--gold); font-family:'Playfair Display',serif; margin-bottom: 8px;">Faculty Portal</h2>
+    <p style="color:var(--muted); font-size:13px; margin-bottom:24px;">Government College Of Engineering, Kolhapur</p>
+    
+    <input type="text" id="fac-user" placeholder="Faculty ID" style="width:100%; padding:14px; margin-bottom:15px; border-radius:12px; border:1px solid var(--border); background:var(--surface2); color:white; font-family:'DM Sans', sans-serif; outline:none;">
+    <input type="password" id="fac-pass" placeholder="Password" style="width:100%; padding:14px; margin-bottom:20px; border-radius:12px; border:1px solid var(--border); background:var(--surface2); color:white; font-family:'DM Sans', sans-serif; outline:none;">
+    
+    <button onclick="facultyLogin()" style="width:100%; padding:14px; font-size:1rem; font-weight:700; border:none; border-radius:12px; background:linear-gradient(135deg, var(--gold), var(--gold2)); color:#0d0f1a; cursor:pointer; margin-bottom:15px;">Secure Login</button>
+    
+    <p id="login-error" style="color:var(--rose); font-size:13px; margin-top:10px; display:none;"></p>
+    
+    <div style="margin-top:15px; border-top:1px solid var(--border); padding-top:15px;">
+      <a href="index.html" style="color:var(--muted); text-decoration:none; font-size:13px; transition:color 0.2s;" onmouseover="this.style.color='var(--gold)'" onmouseout="this.style.color='var(--muted)'">← Back to Student App</a>
+    </div>
+  </div>
+</div>
+
+<div id="loader">
+  <div class="loader-ring"></div>
+  <p>Loading Faculty Analytics…</p>
+</div>
+
+<nav>
+  <div class="nav-brand">
+    SkillLedger Pro
+    <span class="nav-badge">Faculty</span>
+  </div>
+  <div class="nav-right">
+    <a href="index.html" class="nav-link">← Back to App</a>
+    <span id="last-updated"></span>
+    <button class="btn-nav btn-refresh" onclick="init()">⟳ Refresh</button>
+    <button class="btn-nav btn-export"  onclick="exportPDF()">↓ Export PDF</button>
+    <button class="btn-nav" style="background:rgba(240,93,123,0.15); color:var(--rose);" onclick="facultyLogout()">Logout</button>
+  </div>
+</nav>
+
+<div class="page">
+
+  <div class="page-header">
+    <h1>Class Analytics<br>Dashboard</h1>
+    <div class="header-meta">
+      <strong>Government College Of Engineering, Kolhapur</strong><br>
+      SkillLedger Pro · Cohort Overview<br>
+      Soft Skills Assessment System
+    </div>
+  </div>
+
+  <div class="kpi-strip">
+    <div class="kpi"><div class="kpi-label">Students</div><div class="kpi-value" id="kpi-students">—</div><div class="kpi-sub">enrolled</div><div class="kpi-accent" style="background:var(--s1)"></div></div>
+    <div class="kpi"><div class="kpi-label">Class Avg</div><div class="kpi-value" id="kpi-avg">—</div><div class="kpi-sub">total score avg</div><div class="kpi-accent" style="background:var(--s2)"></div></div>
+    <div class="kpi"><div class="kpi-label">Top Score</div><div class="kpi-value" id="kpi-top">—</div><div class="kpi-sub" id="kpi-top-name">—</div><div class="kpi-accent" style="background:var(--s3)"></div></div>
+    <div class="kpi"><div class="kpi-label">Strongest Skill</div><div class="kpi-value" id="kpi-strong">—</div><div class="kpi-sub" id="kpi-strong-name">—</div><div class="kpi-accent" style="background:var(--s4)"></div></div>
+    <div class="kpi"><div class="kpi-label">Needs Focus</div><div class="kpi-value" id="kpi-weak">—</div><div class="kpi-sub" id="kpi-weak-name">—</div><div class="kpi-accent" style="background:var(--s5)"></div></div>
+  </div>
+
+  <div class="section-title">Student × Skill Heatmap</div>
+  <div class="full">
+    <div class="panel">
+      <div class="panel-title">Score intensity — each cell = one student's score in one skill</div>
+      <div id="heatmap-container">
+        <div class="empty"><h3>Waiting for data…</h3><p>Add students and submit votes to see the heatmap.</p></div>
+      </div>
+      <div class="heat-legend">
+        <span>Low</span><div class="heat-legend-bar"></div><span>High</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-title">Skill Breakdown</div>
+  <div class="two-col">
+    <div class="panel">
+      <div class="panel-title">Class skill ranking — avg score per skill</div>
+      <div id="skill-rank-list"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-title">Class radar — average skill profile</div>
+      <div class="chart-wrap"><canvas id="radarChart" height="260"></canvas></div>
+    </div>
+  </div>
+
+  <div class="section-title">Score Distribution</div>
+  <div class="two-col">
+    <div class="panel">
+      <div class="panel-title">Total score distribution — all students</div>
+      <div class="chart-wrap"><canvas id="distChart" height="240"></canvas></div>
+    </div>
+    <div class="panel">
+      <div class="panel-title">Skill avg comparison — bar chart</div>
+      <div class="chart-wrap"><canvas id="barChart" height="240"></canvas></div>
+    </div>
+  </div>
+
+  <div class="section-title">Gap Analysis & Performance</div>
+  <div class="two-col">
+    <div class="panel">
+      <div class="panel-title">Top skill gaps — students furthest below class avg</div>
+      <div id="gap-list"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-title">Performance tier summary</div>
+      <table class="perf-table">
+        <thead>
+          <tr><th>Student</th><th>Total</th><th>Tier</th><th>Career Path</th><th>Voters</th></tr>
+        </thead>
+        <tbody id="perf-table-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const API = "http://localhost:5000";
+const SKILLS = ["Leadership","Communication","Teamwork","Problem Solving","Adaptability"];
+const SKILL_COLORS = ["#f5c842","#00d4aa","#f05d7b","#9b8ee0","#4fc3f7"];
+const CAREERS = {"A+":"C-Suite Executive","A":"Senior Director","B+":"Team Lead","B":"Senior Specialist","C":"Specialist"};
+let chartRadar, chartDist, chartBar;
+
+function heatColor(val, max) {
+  if (!max) return "#1e2338";
+  const t = val/max;
+  if (t<.001) return "#1e2338";
+  if (t<.2)   return "#2e2450";
+  if (t<.4)   return "#5a3a8a";
+  if (t<.6)   return "#9b5a2a";
+  if (t<.8)   return "#c94f3a";
+  return "#f5c842";
+}
+function textOnHeat(val,max){const t=max?val/max:0;return t>.35?"rgba(255,255,255,.95)":"rgba(238,240,248,.4)";}
+function tier(total){const a=total/SKILLS.length;if(a>=40)return"A+";if(a>=32)return"A";if(a>=25)return"B+";if(a>=18)return"B";return"C";}
+function tierPillClass(t){return{A:"tier-a","A+":"tier-ap","B+":"tier-bp",B:"tier-b",C:"tier-c"}[t]||"tier-c";}
+
+async function init() {
+  document.getElementById("loader").classList.remove("hidden");
+  let data={};
+  try { const r=await fetch(`${API}/leaderboard`); data=await r.json(); }
+  catch { document.getElementById("loader").classList.add("hidden"); showOffline(); return; }
+  const entries=Object.entries(data);
+  if(!entries.length){document.getElementById("loader").classList.add("hidden"); showEmpty(); return;}
+  buildKPIs(entries); buildHeatmap(entries); buildSkillRank(entries);
+  buildRadar(entries); buildDistChart(entries); buildBarChart(entries);
+  buildGapList(entries); buildPerfTable(entries);
+  document.getElementById("last-updated").textContent="Updated "+new Date().toLocaleTimeString("en-IN",{hour:"2-digit",minute:"2-digit"});
+  document.getElementById("loader").classList.add("hidden");
+}
+
+function buildKPIs(entries){
+  const totals=entries.map(([,s])=>s.total||0);
+  const classAvg=totals.reduce((a,b)=>a+b,0)/totals.length;
+  const topIdx=totals.indexOf(Math.max(...totals));
+  const skillAvgs=SKILLS.map(sk=>entries.reduce((s,[,d])=>s+(d.scores?.[sk]||0),0)/entries.length);
+  const si=skillAvgs.indexOf(Math.max(...skillAvgs));
+  const wi=skillAvgs.indexOf(Math.min(...skillAvgs));
+  document.getElementById("kpi-students").textContent=entries.length;
+  document.getElementById("kpi-avg").textContent=classAvg.toFixed(1);
+  document.getElementById("kpi-top").textContent=totals[topIdx].toFixed(0);
+  document.getElementById("kpi-top-name").textContent=entries[topIdx][0];
+  document.getElementById("kpi-strong").textContent=skillAvgs[si].toFixed(1);
+  document.getElementById("kpi-strong-name").textContent=SKILLS[si];
+  document.getElementById("kpi-weak").textContent=skillAvgs[wi].toFixed(1);
+  document.getElementById("kpi-weak-name").textContent=SKILLS[wi];
+}
+
+function buildHeatmap(entries){
+  const container=document.getElementById("heatmap-container");
+  let maxVal=0;
+  entries.forEach(([,s])=>SKILLS.forEach(sk=>{maxVal=Math.max(maxVal,s.scores?.[sk]||0);}));
+  const grid=document.createElement("div"); grid.id="heatmap-grid";
+  grid.style.gridTemplateColumns=`130px repeat(${entries.length},minmax(38px,1fr))`;
+  grid.appendChild(document.createElement("div"));
+  entries.forEach(([name])=>{
+    const lbl=document.createElement("div"); lbl.className="hm-col-label";
+    lbl.textContent=name.length>10?name.slice(0,9)+"…":name; lbl.title=name;
+    grid.appendChild(lbl);
+  });
+  SKILLS.forEach((skill,si)=>{
+    const rlbl=document.createElement("div"); rlbl.className="hm-row-label";
+    rlbl.innerHTML=`<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${SKILL_COLORS[si]};margin-right:7px;flex-shrink:0"></span>${skill}`;
+    grid.appendChild(rlbl);
+    entries.forEach(([name,s])=>{
+      const val=s.scores?.[skill]||0;
+      const cell=document.createElement("div"); cell.className="hm-cell";
+      cell.style.background=heatColor(val,maxVal); cell.style.color=textOnHeat(val,maxVal);
+      cell.textContent=val>0?val:"";
+      const tt=document.createElement("div"); tt.className="tt";
+      tt.textContent=`${name} · ${skill}: ${val} pts`; cell.appendChild(tt);
+      grid.appendChild(cell);
+    });
+  });
+  container.innerHTML=""; container.appendChild(grid);
+}
+
+function buildSkillRank(entries){
+  const skillAvgs=SKILLS.map((sk,i)=>({name:sk,color:SKILL_COLORS[i],avg:entries.reduce((s,[,d])=>s+(d.scores?.[sk]||0),0)/entries.length}));
+  const maxAvg=Math.max(...skillAvgs.map(s=>s.avg));
+  const classAvg=entries.reduce((s,[,d])=>s+(d.total||0),0)/entries.length/SKILLS.length;
+  const sorted=[...skillAvgs].sort((a,b)=>b.avg-a.avg);
+  document.getElementById("skill-rank-list").innerHTML=sorted.map((sk,i)=>{
+    const pct=maxAvg>0?(sk.avg/maxAvg*100).toFixed(0):0;
+    const delta=sk.avg>=classAvg?"delta-hi":"delta-lo";
+    return`<div class="skill-rank-row"><div class="skill-rank-num">${i+1}</div><div class="skill-rank-dot" style="background:${sk.color}"></div><div class="skill-rank-name">${sk.name}</div><div class="skill-rank-bar-wrap"><div class="skill-rank-bar" style="width:${pct}%;background:${sk.color}"></div></div><div class="skill-rank-val">${sk.avg.toFixed(1)}</div><div class="skill-delta ${delta}">${sk.avg.toFixed(1)}</div></div>`;
+  }).join("");
+}
+
+function buildRadar(entries){
+  const avgs=SKILLS.map(sk=>entries.reduce((s,[,d])=>s+(d.scores?.[sk]||0),0)/entries.length);
+  if(chartRadar)chartRadar.destroy();
+  chartRadar=new Chart(document.getElementById("radarChart").getContext("2d"),{type:"radar",data:{labels:SKILLS,datasets:[{label:"Class Average",data:avgs,backgroundColor:"rgba(245,200,66,0.08)",borderColor:"#f5c842",borderWidth:2.5,pointBackgroundColor:SKILL_COLORS,pointBorderColor:"#0d0f1a",pointBorderWidth:2,pointRadius:5}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{r:{beginAtZero:true,max:50,ticks:{stepSize:10,color:"#7a7f9a",backdropColor:"transparent",font:{size:10}},grid:{color:"rgba(255,255,255,0.05)"},pointLabels:{font:{size:11,weight:"600"},color:"#7a7f9a"}}}}});
+}
+
+function buildDistChart(entries){
+  const totals=entries.map(([,s])=>s.total||0);
+  const bins=[0,0,0,0,0];
+  totals.forEach(t=>{bins[Math.min(4,Math.floor(t/10))]++;});
+  if(chartDist)chartDist.destroy();
+  chartDist=new Chart(document.getElementById("distChart").getContext("2d"),{type:"bar",data:{labels:["0–9","10–19","20–29","30–39","40+"],datasets:[{label:"Students",data:bins,backgroundColor:["#2e2450","#5a3a8a","#9b5a2a","#3a6bc9","#2a9c6e"],borderRadius:8,borderSkipped:false}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{stepSize:1,color:"#7a7f9a",font:{size:11}},grid:{color:"rgba(255,255,255,0.04)"}},x:{ticks:{color:"#7a7f9a",font:{size:11}},grid:{display:false}}}}});
+}
+
+function buildBarChart(entries){
+  const avgs=SKILLS.map(sk=>entries.reduce((s,[,d])=>s+(d.scores?.[sk]||0),0)/entries.length);
+  if(chartBar)chartBar.destroy();
+  chartBar=new Chart(document.getElementById("barChart").getContext("2d"),{type:"bar",data:{labels:SKILLS.map(s=>s.split(" ")),datasets:[{label:"Class Average",data:avgs,backgroundColor:SKILL_COLORS,borderRadius:8,borderSkipped:false}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,max:50,ticks:{color:"#7a7f9a",font:{size:11}},grid:{color:"rgba(255,255,255,0.04)"}},x:{ticks:{color:"#7a7f9a",font:{size:11,weight:"500"}},grid:{display:false}}}}});
+}
+
+function buildGapList(entries){
+  const skillAvgs=SKILLS.map(sk=>entries.reduce((s,[,d])=>s+(d.scores?.[sk]||0),0)/entries.length);
+  const gaps=[];
+  entries.forEach(([name,s])=>{SKILLS.forEach((sk,i)=>{const score=s.scores?.[sk]||0;const gap=skillAvgs[i]-score;if(gap>0)gaps.push({name,skill:sk,score,gap,color:SKILL_COLORS[i]});});});
+  gaps.sort((a,b)=>b.gap-a.gap);
+  const top=gaps.slice(0,8);
+  const el=document.getElementById("gap-list");
+  if(!top.length){el.innerHTML='<div class="empty"><p>All students are at or above class average on every skill. 🎉</p></div>';return;}
+  const maxGap=Math.max(...top.map(g=>g.gap));
+  el.innerHTML=top.map(g=>`<div class="gap-item"><div class="gap-student" title="${g.name}">${g.name}</div><div class="gap-skill">${g.skill}</div><div class="gap-bar-wrap"><div class="gap-bar" style="width:${(g.gap/maxGap*100).toFixed(0)}%;background:${g.color}"></div></div><div class="gap-score">−${g.gap.toFixed(1)}</div></div>`).join("");
+}
+
+function buildPerfTable(entries){
+  document.getElementById("perf-table-body").innerHTML=entries.map(([name,s])=>{
+    const t=tier(s.total||0); const tc=tierPillClass(t);
+    return`<tr><td style="font-weight:600;color:var(--text)">${name}</td><td style="font-weight:700;color:var(--gold)">${(s.total||0).toFixed(0)}</td><td><span class="tier-pill ${tc}">${t}</span></td><td style="color:var(--muted);font-size:12px">${CAREERS[t]||"Specialist"}</td><td style="color:var(--muted)">${s.voters}</td></tr>`;
+  }).join("");
+}
+
+function showOffline(){document.getElementById("heatmap-container").innerHTML='<div class="empty"><h3>Backend not running</h3><p>Start the server: <code>node server.js</code> then click Refresh.</p></div>';}
+function showEmpty(){document.getElementById("heatmap-container").innerHTML='<div class="empty"><h3>No data yet</h3><p>Add students and submit votes in the main app, then come back here.</p></div>';}
+
+async function exportPDF(){
+  const btn=document.querySelector(".btn-export"); btn.textContent="Generating…"; btn.disabled=true;
+  const {jsPDF}=window.jspdf; const doc=new jsPDF("l","mm","a4"); const W=297,H=210;
+  doc.setFillColor(13,15,26); doc.rect(0,0,W,H,"F");
+  doc.setFillColor(245,200,66); doc.rect(0,0,6,H,"F");
+  doc.setTextColor(245,200,66); doc.setFont("helvetica","bold"); doc.setFontSize(32);
+  doc.text("Class Analytics Report",18,42);
+  doc.setTextColor(200,200,220); doc.setFont("helvetica","normal"); doc.setFontSize(13);
+  doc.text("SkillLedger Pro · Faculty Dashboard",18,56);
+  doc.setTextColor(122,127,154); doc.setFontSize(10);
+  doc.text("Government College Of Engineering, Kolhapur",18,70);
+  doc.text("Generated: "+new Date().toLocaleString("en-IN"),18,78);
+  const kpiIds=["kpi-students","kpi-avg","kpi-top","kpi-strong","kpi-weak"];
+  const kpiLabels=["Students","Class Avg","Top Score","Strongest","Needs Focus"];
+  kpiIds.forEach((id,i)=>{
+    const val=document.getElementById(id)?.textContent||"—"; const x=18+i*52;
+    doc.setFillColor(30,35,56); doc.roundedRect(x,95,46,28,3,3,"F");
+    doc.setTextColor(245,200,66); doc.setFontSize(7); doc.setFont("helvetica","bold");
+    doc.text(kpiLabels[i].toUpperCase(),x+4,103);
+    doc.setTextColor(238,240,248); doc.setFontSize(15);
+    doc.text(val.length>8?val.slice(0,8):val,x+4,115);
+    doc.setFillColor(245,200,66); doc.rect(x,122,46,1,"F");
+  });
+  doc.addPage(); doc.setFillColor(13,15,26); doc.rect(0,0,W,H,"F");
+  doc.setFillColor(245,200,66); doc.rect(0,0,6,H,"F");
+  doc.setTextColor(245,200,66); doc.setFont("helvetica","bold"); doc.setFontSize(16);
+  doc.text("Skill Breakdown & Distribution",14,18);
+  try {
+    const rI=await html2canvas(document.getElementById("radarChart"),{scale:2,backgroundColor:"#1e2338"}).then(c=>c.toDataURL("image/png"));
+    const dI=await html2canvas(document.getElementById("distChart"),{scale:2,backgroundColor:"#1e2338"}).then(c=>c.toDataURL("image/png"));
+    const bI=await html2canvas(document.getElementById("barChart"),{scale:2,backgroundColor:"#1e2338"}).then(c=>c.toDataURL("image/png"));
+    doc.addImage(rI,"PNG",14,24,85,82); doc.addImage(dI,"PNG",106,24,85,82); doc.addImage(bI,"PNG",198,24,90,82);
+  }catch(e){}
+  try{
+    doc.addPage(); doc.setFillColor(13,15,26); doc.rect(0,0,W,H,"F");
+    doc.setFillColor(245,200,66); doc.rect(0,0,6,H,"F");
+    doc.setTextColor(245,200,66); doc.setFont("helvetica","bold"); doc.setFontSize(16);
+    doc.text("Student × Skill Heatmap",14,18);
+    const hI=await html2canvas(document.getElementById("heatmap-container"),{scale:1.5,backgroundColor:"#161929",useCORS:true}).then(c=>c.toDataURL("image/png"));
+    doc.addImage(hI,"PNG",14,24,W-28,Math.min(160,W-28));
+  }catch(e){}
+  doc.addPage(); doc.setFillColor(13,15,26); doc.rect(0,0,W,H,"F");
+  doc.setFillColor(245,200,66); doc.rect(0,0,6,H,"F");
+  doc.setTextColor(245,200,66); doc.setFont("helvetica","bold"); doc.setFontSize(16);
+  doc.text("Performance Tier Summary",14,18);
+  let lbData={};
+  try{const r=await fetch(`${API}/leaderboard`);lbData=await r.json();}catch{}
+  const rows=Object.entries(lbData);
+  const colW=[60,25,25,55,30,30,30,30,25];
+  const headers=["Student","Total","Tier","Career","Leadership","Comm.","Teamwork","Prob.Slv","Adapt."];
+  doc.setFillColor(30,35,56); doc.rect(14,26,W-28,8,"F");
+  doc.setTextColor(245,200,66); doc.setFontSize(8); doc.setFont("helvetica","bold");
+  let cx=14; headers.forEach((h,i)=>{doc.text(h,cx+2,32);cx+=colW[i];});
+  rows.forEach(([name,s],ri)=>{
+    const y=40+ri*9; if(y>H-10)return;
+    if(ri%2===0){doc.setFillColor(22,25,41);doc.rect(14,y-5,W-28,9,"F");}
+    doc.setTextColor(238,240,248); doc.setFont("helvetica","normal"); doc.setFontSize(8);
+    const t=tier(s.total||0);
+    const vals=[name.slice(0,14),(s.total||0).toFixed(0),t,(CAREERS[t]||"").slice(0,18),s.scores?.Leadership||0,s.scores?.Communication||0,s.scores?.Teamwork||0,s.scores?.["Problem Solving"]||0,s.scores?.Adaptability||0];
+    cx=14; vals.forEach((v,i)=>{doc.text(String(v),cx+2,y);cx+=colW[i];});
+  });
+  const pc=doc.getNumberOfPages();
+  for(let p=1;p<=pc;p++){doc.setPage(p);doc.setFillColor(245,200,66);doc.rect(0,H-6,W,6,"F");doc.setTextColor(13,15,26);doc.setFontSize(7);doc.setFont("helvetica","normal");doc.text(`SkillLedger Pro · Faculty Analytics · Page ${p} of ${pc}`,14,H-1.5);doc.text(new Date().toLocaleString("en-IN"),W-14,H-1.5,{align:"right"});}
+  doc.save(`SkillLedger_Faculty_Report_${new Date().toISOString().split("T")[0]}.pdf`);
+  btn.textContent="↓ Export PDF"; btn.disabled=false;
+}
+
+// --- AUTHENTICATION LOGIC ---
+document.addEventListener("DOMContentLoaded", () => {
+  if (sessionStorage.getItem("facultyLoggedIn") === "true") {
+    document.getElementById("faculty-login-overlay").style.display = "none";
+    init();
+    setInterval(init, 30000);
+  } else {
+    document.getElementById("loader").classList.add("hidden");
+  }
+});
+
+async function facultyLogin() {
+  const u = document.getElementById("fac-user").value.trim();
+  const p = document.getElementById("fac-pass").value.trim();
+  const err = document.getElementById("login-error");
+
+  if (!u || !p) {
+    err.textContent = "❌ Please enter both ID and Password.";
+    err.style.display = "block";
+    return;
+  }
+
+  try {
+    const r = await fetch(`${API}/faculty-login`, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username: u, password: p })
+    });
+    const d = await r.json();
+
+    if (d.success) {
+      sessionStorage.setItem("facultyLoggedIn", "true");
+      document.getElementById("faculty-login-overlay").style.opacity = "0";
+      setTimeout(() => {
+        document.getElementById("faculty-login-overlay").style.display = "none";
+        init();
+        setInterval(init, 30000);
+      }, 300);
+    } else {
+      err.textContent = "❌ " + d.message;
+      err.style.display = "block";
+    }
+  } catch {
+    err.textContent = "❌ Server offline. Please start backend.";
+    err.style.display = "block";
+  }
+}
+
+function facultyLogout() {
+  sessionStorage.removeItem("facultyLoggedIn");
+  location.reload(); 
+}
+</script>
+</body>
+</html>

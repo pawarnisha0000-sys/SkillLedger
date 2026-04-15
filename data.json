@@ -1,0 +1,142 @@
+{
+  "users": [
+    {
+      "username": "nita",
+      "password": "1808",
+      "credits": 25
+    },
+    {
+      "username": "Nisha",
+      "password": "2005",
+      "credits": 25
+    },
+    {
+      "username": "Pradnya",
+      "password": "242005",
+      "credits": 3
+    },
+    {
+      "username": "Vikram",
+      "password": "2010",
+      "credits": 6
+    }
+  ],
+  "students": {
+    "Nisha Pawar": {
+      "scores": {
+        "Leadership": 7,
+        "Communication": 4,
+        "Teamwork": 6,
+        "Problem Solving": 7,
+        "Adaptability": 5
+      },
+      "voters": [
+        "nita"
+      ]
+    },
+    "Samiksha Dhanavade": {
+      "scores": {
+        "Leadership": 0,
+        "Communication": 0,
+        "Teamwork": 0,
+        "Problem Solving": 0,
+        "Adaptability": 0
+      },
+      "voters": []
+    },
+    "Mayuri Vedpathak": {
+      "scores": {
+        "Leadership": 0,
+        "Communication": 0,
+        "Teamwork": 0,
+        "Problem Solving": 0,
+        "Adaptability": 0
+      },
+      "voters": []
+    },
+    "Nita Pawar": {
+      "scores": {
+        "Leadership": 3,
+        "Communication": 2,
+        "Teamwork": 2,
+        "Problem Solving": 0,
+        "Adaptability": 2
+      },
+      "voters": [
+        "nita"
+      ]
+    },
+    "Sujal Inchanalkar": {
+      "scores": {
+        "Leadership": 0,
+        "Communication": 0,
+        "Teamwork": 0,
+        "Problem Solving": 0,
+        "Adaptability": 0
+      },
+      "voters": []
+    },
+    "Sadashiv Mhadeshvar": {
+      "scores": {
+        "Leadership": 0,
+        "Communication": 0,
+        "Teamwork": 0,
+        "Problem Solving": 0,
+        "Adaptability": 0
+      },
+      "voters": []
+    },
+    "Ayaan Tamboli": {
+      "scores": {
+        "Leadership": 1,
+        "Communication": 1,
+        "Teamwork": 1,
+        "Problem Solving": 4,
+        "Adaptability": 2
+      },
+      "voters": [
+        "nita"
+      ]
+    },
+    "Pranali Metil": {
+      "scores": {
+        "Leadership": 0,
+        "Communication": 0,
+        "Teamwork": 0,
+        "Problem Solving": 0,
+        "Adaptability": 0
+      },
+      "voters": []
+    },
+    "Pranali Ingale": {
+      "scores": {
+        "Leadership": 0,
+        "Communication": 0,
+        "Teamwork": 0,
+        "Problem Solving": 0,
+        "Adaptability": 0
+      },
+      "voters": []
+    },
+    "Akansha Pawar": {
+      "scores": {
+        "Leadership": 0,
+        "Communication": 0,
+        "Teamwork": 0,
+        "Problem Solving": 0,
+        "Adaptability": 0
+      },
+      "voters": []
+    },
+    "Atharv Salunkhe": {
+      "scores": {
+        "Leadership": 0,
+        "Communication": 0,
+        "Teamwork": 0,
+        "Problem Solving": 0,
+        "Adaptability": 0
+      },
+      "voters": []
+    }
+  }
+}

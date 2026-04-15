@@ -210,7 +210,7 @@ app.post("/vote", (req, res) => {
   Object.keys(skills).forEach(skill => {
     if (skills[skill] > 0) s.scores[skill] = (s.scores[skill] || 0) + Number(skills[skill]);
   });
-
+s.total = Object.values(s.scores).reduce((a, b) => a + b, 0);
   // ✅ Store full vote details
 if (!db.votes) db.votes = [];
 

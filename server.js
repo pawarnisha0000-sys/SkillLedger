@@ -68,11 +68,11 @@ const AI_TEMPLATES = {
 };
 
 const CAREER_PATHS = {
-  "A+": { title: "C-Suite Executive", icon: "🏛️", desc: "Fortune 500 leadership trajectory" },
-  "A":  { title: "Senior Director",   icon: "🚀", desc: "High-impact industry leader" },
-  "B+": { title: "Team Lead",         icon: "⭐", desc: "Rising organizational star" },
-  "B":  { title: "Senior Specialist", icon: "📈", desc: "Strong individual contributor" },
-  "C":  { title: "Specialist",        icon: "🌱", desc: "Solid foundation to build upon" }
+  "A+": "Top Performer",
+  "A": "Strong Performer",
+  "B+": "All-Rounder",
+  "B": "Growing",
+  "C": "Beginner"
 };
 
 function getUniqueAIInsights(scores, studentName) {

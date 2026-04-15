@@ -326,7 +326,13 @@ nav {
 const API = "https://skillledger-backend.onrender.com";
 const SKILLS = ["Leadership","Communication","Teamwork","Problem Solving","Adaptability"];
 const SKILL_COLORS = ["#f5c842","#00d4aa","#f05d7b","#9b8ee0","#4fc3f7"];
-const CAREERS = {"A+":"C-Suite Executive","A":"Senior Director","B+":"Team Lead","B":"Senior Specialist","C":"Specialist"};
+const CAREERS = {
+  "A+": "Top Performer",
+  "A": "Strong Performer",
+  "B+": "All-Rounder",
+  "B": "Growing",
+  "C": "Beginner"
+};
 let chartRadar, chartDist, chartBar;
 
 function heatColor(val, max) {
